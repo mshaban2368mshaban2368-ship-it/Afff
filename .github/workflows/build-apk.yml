@@ -111,16 +111,26 @@ jobs:
           RELEASE_TITLE: ${{ steps.release_meta.outputs.title }}
           ASSET_FILENAME: ${{ steps.release_meta.outputs.asset_filename }}
         run: |
-          if [ "$RELEASE_OUTCOME" = "success" ]; then
-            gh release view "$RELEASE_TAG"
-            RELEASE_URL=$(gh release view "$RELEASE_TAG" --json url --jq '.url')
-            CONFIRMED_ASSET=$(gh release view "$RELEASE_TAG" --json assets --jq --arg name "$ASSET_FILENAME" '.assets[] | select(.name == $name) | .name')
-            FINAL_ASSET="${CONFIRMED_ASSET:-$ASSET_FILENAME}"
+          VERIFIED=false
+          RELEASE_URL=""
+          CONFIRMED_ASSET=""
 
+          if [ "$RELEASE_OUTCOME" = "success" ]; then
+            if gh release view "$RELEASE_TAG"; then
+              RELEASE_URL=$(gh release view "$RELEASE_TAG" --json url --jq '.url' || true)
+              IS_DRAFT=$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' || true)
+              CONFIRMED_ASSET=$(gh release view "$RELEASE_TAG" --json assets --jq --arg name "$ASSET_FILENAME" '.assets[] | select(.name == $name) | .name' || true)
+              if [ -n "$RELEASE_URL" ] && [ "$IS_DRAFT" = "false" ] && [ -n "$CONFIRMED_ASSET" ]; then
+                VERIFIED=true
+              fi
+            fi
+          fi
+
+          if [ "$VERIFIED" = "true" ]; then
             echo "Release tag: $RELEASE_TAG"
             echo "Release title: $RELEASE_TITLE"
             echo "Release URL: $RELEASE_URL"
-            echo "APK asset filename: $FINAL_ASSET"
+            echo "APK asset filename: $CONFIRMED_ASSET"
 
             {
               echo "## APK Build & Release Result"
@@ -131,12 +141,12 @@ jobs:
               echo "- **Release tag:** \`$RELEASE_TAG\`"
               echo "- **Release title:** $RELEASE_TITLE"
               echo "- **Release URL:** $RELEASE_URL"
-              echo "- **APK asset:** \`$FINAL_ASSET\`"
+              echo "- **APK asset:** \`$CONFIRMED_ASSET\`"
               echo ""
               echo "The APK can be downloaded directly from the **Assets** section on the GitHub Release page above. The normal Actions artifact (\`app-debug-apk\`) is also available as a backup."
             } >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::warning::GitHub Release publishing failed. The APK build succeeded and the Actions artifact 'app-debug-apk' remains available."
+            echo "::warning::GitHub Release publishing failed or could not be verified. The APK build succeeded and the Actions artifact 'app-debug-apk' remains available."
             echo "APK build succeeded."
             echo "Actions artifact 'app-debug-apk' remains available."
 
@@ -147,6 +157,7 @@ jobs:
               echo ""
               echo "- **APK build:** Succeeded (\`app/build/outputs/apk/debug/app-debug.apk\`)"
               echo "- **Actions artifact:** \`app-debug-apk\` remains available for download as a backup."
+              echo "- **Release status:** Failed"
               echo ""
               echo "Download the debug APK from the **Artifacts** section (\`app-debug-apk\`) of this workflow run."
             } >> "$GITHUB_STEP_SUMMARY"
