@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">FA97</string>
+    <string name="cd_toggle_theme">Toggle light or dark theme</string>
+    <string name="cd_toggle_history">Toggle calculation history</string>
+    <string name="cd_toggle_scientific">Toggle scientific mode</string>
+    <string name="cd_backspace">Backspace</string>
+    <string name="cd_clear_history">Clear calculation history</string>
+    <string name="cd_close_history">Close history panel</string>
+    <string name="sci_label">SCI</string>
+    <string name="std_label">STD</string>
+    <string name="deg_label">DEG</string>
+    <string name="rad_label">RAD</string>
+    <string name="history_title">History</string>
+    <string name="history_empty_title">No calculations yet</string>
+    <string name="history_empty_subtitle">Your solved expressions will appear here for quick reuse</string>
+    <string name="clear_history">Clear all</string>
+    <string name="reuse_hint">Tap an entry to reuse</string>
+    <string name="error_divide_by_zero">Cannot divide by zero</string>
+    <string name="error_invalid_expression">Invalid expression</string>
+    <string name="error_domain">Math domain error</string>
+    <string name="error_overflow">Value out of range</string>
+</resources>
